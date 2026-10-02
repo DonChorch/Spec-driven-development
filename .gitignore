@@ -1,0 +1,6 @@
+__pycache__/
+*.py[co]
+.DS_Store
+Thumbs.db
+desktop.ini
+*-workspace/
