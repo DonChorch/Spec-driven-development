@@ -35,6 +35,22 @@ python sdd.py validar [NNN]                   # controla la calidad; devuelve 1 
 python sdd.py estado                          # estado, fase y avance de tareas
 ```
 
+### Tablero de tareas
+
+`skills/spec-driven-development/scripts/tablero.py` (Python 3.8 o posterior, sin dependencias) levanta una web local con las tareas de cada especificación agrupadas por etapa:
+
+```bash
+python tablero.py                         # http://127.0.0.1:5070 (solo en el propio equipo)
+python tablero.py nota 001 T03 "texto"    # agrega una nota a una tarea
+python tablero.py resumen 001             # lo mismo, en texto
+```
+
+- **Fuente:** lee los `tasks.md`, que siguen siendo la única fuente; no copia datos.
+- **Estado de cada tarea:** lo deduce: hecha, falta revisión, espera a otra persona, bloqueada por otra tarea o pendiente.
+- **Actualización:** la página se actualiza sola cuando cambia un archivo.
+- **Notas:** se agregan desde la página y quedan en `sdd/tablero/notas.json`.
+- **Red:** escucha solo en `127.0.0.1`.
+
 `validar` revisa:
 - **Trazabilidad:** cada requisito "Debe" tiene un criterio de aceptación, y los criterios y las tareas apuntan a ids que existen.
 - **Criterios de aceptación:** escritos como Dado / Cuando / Entonces.

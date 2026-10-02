@@ -1,6 +1,6 @@
 ---
 name: spec-driven-development
-description: Desarrollo guiado por especificaciones (Spec-Driven Development, metodología de specdriven.ai) con constitution.md, specification.md, plan.md y tasks.md, en fases (Constitución, Especificar, Aclarar, Planificar, Tareas, Implementar, Iterar) y con controles de calidad para avanzar. Usala siempre que el proyecto tenga una carpeta sdd/ o especificaciones, y cuando la persona pida armar o seguir specs, una constitución, requisitos, criterios de aceptación, un plan técnico o tareas; cuando quiera arrancar una funcionalidad nueva "bien hecha" antes de programar; cuando pregunte en qué estado está una especificación o qué falta; o cuando diga "spec", "SDD", "spec-driven", "especificación", "historia de usuario" o "trazabilidad", aunque no nombre la metodología. También antes de implementar algo grande en un proyecto que ya trabaja con specs.
+description: Desarrollo guiado por especificaciones (Spec-Driven Development, metodología de specdriven.ai) con constitution.md, specification.md, plan.md y tasks.md, en fases (Constitución, Especificar, Aclarar, Planificar, Tareas, Implementar, Iterar) y con controles de calidad para avanzar. Usala siempre que el proyecto tenga una carpeta sdd/ o especificaciones, y cuando la persona pida armar o seguir specs, una constitución, requisitos, criterios de aceptación, un plan técnico o tareas; cuando quiera arrancar una funcionalidad nueva "bien hecha" antes de programar; cuando pregunte en qué estado está una especificación o qué falta, o pida un tablero, una web o un listado de tareas por etapa; o cuando diga "spec", "SDD", "spec-driven", "especificación", "historia de usuario" o "trazabilidad", aunque no nombre la metodología. También antes de implementar algo grande en un proyecto que ya trabaja con specs.
 ---
 
 # Spec-Driven Development
@@ -29,8 +29,34 @@ Las plantillas genéricas están en `assets/plantillas/`. Si el proyecto tiene `
 | `python <skill>/scripts/sdd.py nueva "Título"` | Crea `specs/NNN-titulo/` con el número siguiente y la suma al índice |
 | `python <skill>/scripts/sdd.py validar [NNN]` | Control de calidad: trazabilidad, Dado/Cuando/Entonces, aclaraciones que bloquean, tareas sin verificar, índice. Devuelve 1 si hay errores |
 | `python <skill>/scripts/sdd.py estado` | Estado, fase y avance de tareas de cada especificación |
+| `python <skill>/scripts/tablero.py` | Tablero web local (http://127.0.0.1:5070) con las tareas por etapa, su estado y notas; se actualiza solo |
+| `python <skill>/scripts/tablero.py nota NNN Txx "texto"` | Agrega una nota a una tarea (la usás al avanzarla) |
+| `python <skill>/scripts/tablero.py resumen NNN` | El mismo tablero, en texto |
 
 Corré `validar` **antes de anunciar** que una especificación avanzó de fase, y al terminar una implementación. Los errores se corrigen; los avisos se revisan y se explican.
+
+## Tablero de tareas
+
+Cuando la persona quiera ver el avance de forma visual, o pida una web, un tablero o un listado por etapas, levantá el tablero en vez de armar uno a mano:
+
+```
+python <skill>/scripts/tablero.py [--raiz RUTA] [--puerto 5070]
+```
+
+- **Lee los `tasks.md` directamente, que siguen siendo la única fuente:** no hay datos duplicados. Las etapas son las secciones `## ` de cada `tasks.md`. Sin secciones, muestra un solo grupo.
+- **El estado de cada tarea se deduce:**
+  - *hecha*: `[x]`.
+  - *falta revisión*: la verificación dice "falta la revisión".
+  - *espera a otra persona*: la columna *Quién* no es el agente.
+  - *bloqueada*: depende de una tarea sin hacer.
+  - *pendiente*: todo lo demás.
+  - Si una tarea hecha dice "sin ejecutar" o "no probado", se marca *con partes sin probar*.
+- **Notas:** la persona las agrega desde la página y quedan en `sdd/tablero/notas.json`, firmadas con su usuario.
+- **Actualización:** la página se refresca sola cada 3 s cuando cambia un archivo.
+- **Red:** escucha solo en `127.0.0.1`. **No lo abras a la red** sin acordar antes quién entra y cómo se autentica, porque las tareas suelen tener detalles de seguridad e infraestructura.
+- **Proceso en segundo plano:** si lo levantás vos, el proceso puede tener un límite de tiempo. Para tenerlo siempre disponible, la persona lo corre en su propia terminal.
+- **Proyecto:** el nombre sale de `**Sistema:**` o `**Proyecto:**` de la constitución, o del título del índice.
+- **Copia en el proyecto:** se puede copiar en `sdd/tablero/`, junto con `assets/tablero/tablero.html`, si el proyecto quiere tener su propia copia. Funciona igual desde la raíz.
 
 ## Comandos interactivos por etapa
 
@@ -82,6 +108,7 @@ Cada fase tiene un control de salida. **No pases a la siguiente sin cumplirlo.**
 ### 5 · Implementar
 - Una tarea por vez, en orden. Antes de empezar, releé los requisitos y criterios que cubre.
 - Marcá `[x]` **solo cuando la verificaste**, y escribí cómo. Si no pudiste probarla (falta un entorno, una clave, un permiso), dejala `[x]` solo si el código está completo, y decilo en la verificación.
+- **Regla del tablero:** cada vez que una tarea avanza, se cierra, se bloquea o cambia de alcance, en el mismo paso actualizá su fila en `tasks.md` y agregá una nota con `tablero.py nota NNN Txx "qué se hizo, cómo se verificó, qué falta"`. Antes de retomar una tarea, leé las notas que haya dejado la persona en `sdd/tablero/notas.json`.
 - Si aparece algo que la especificación no prevé, **pará y actualizá primero la especificación** (o registrá una aclaración). El código nunca se aparta de la especificación en silencio.
 - **Control:** CA cumplidos y verificados; `validar` sin errores; estado *Implementada*.
 

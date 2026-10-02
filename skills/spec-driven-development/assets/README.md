@@ -23,6 +23,8 @@ sdd/
 
 Control de calidad: `python <skill>/scripts/sdd.py validar`.
 
+Tablero de tareas por etapa, con notas: `python <skill>/scripts/tablero.py`, en http://127.0.0.1:5070.
+
 ## Índice
 | # | Especificación | Estado | Fase | Notas |
 |---|---|---|---|---|

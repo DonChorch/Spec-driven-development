@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tablero SDD</title>
+<style>
+  :root {
+    --fondo: #f6f7f9; --panel: #ffffff; --borde: #dfe3e8; --texto: #1d232b; --suave: #5b6673; --tenue: #8a94a0;
+    --acento: #2b5fb4; --codigo: #eef1f5;
+    --hecha: #1f7a4d; --hecha-f: #e3f3ea; --revision: #8a5a00; --revision-f: #fdf1d6;
+    --espera: #6b4fa0; --espera-f: #efe9fa; --bloqueada: #9a3b3b; --bloqueada-f: #f9e6e6;
+    --pendiente: #4b5563; --pendiente-f: #eceef1; --aviso: #8a5a00;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --fondo: #12161b; --panel: #1a2027; --borde: #2c343e; --texto: #e4e8ed; --suave: #a3adb9; --tenue: #7c8794;
+      --acento: #7aa7f0; --codigo: #232b34;
+      --hecha: #6fd3a0; --hecha-f: #173327; --revision: #f0c46a; --revision-f: #3a2e12;
+      --espera: #b9a2ec; --espera-f: #2a2240; --bloqueada: #f0a0a0; --bloqueada-f: #3a1f1f;
+      --pendiente: #c3cad3; --pendiente-f: #262d36; --aviso: #f0c46a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--fondo); color: var(--texto); font: 15px/1.5 "Segoe UI", system-ui, sans-serif; }
+  header { position: sticky; top: 0; z-index: 2; background: var(--panel); border-bottom: 1px solid var(--borde); }
+  .barra { max-width: 1180px; margin: 0 auto; padding: 12px 16px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  h1 { font-size: 18px; margin: 0; font-weight: 600; }
+  h1 small { color: var(--suave); font-weight: 400; }
+  select, input, textarea, button { font: inherit; color: inherit; }
+  select { background: var(--panel); border: 1px solid var(--borde); border-radius: 6px; padding: 5px 8px; max-width: 100%; }
+  .vivo { margin-left: auto; color: var(--suave); font-size: 13px; display: flex; align-items: center; gap: 6px; }
+  .vivo::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--hecha); }
+  .vivo.error::before { background: var(--bloqueada); }
+  main { max-width: 1180px; margin: 0 auto; padding: 16px; }
+  .resumen { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 16px; }
+  .chip { border: 1px solid var(--borde); background: var(--panel); border-radius: 999px; padding: 4px 12px; cursor: pointer; font-size: 14px; }
+  .chip[aria-pressed="true"] { border-color: var(--acento); box-shadow: inset 0 0 0 1px var(--acento); }
+  .chip b { font-variant-numeric: tabular-nums; }
+  .meta { color: var(--suave); font-size: 13px; margin-bottom: 12px; }
+  .etapa { background: var(--panel); border: 1px solid var(--borde); border-radius: 10px; margin-bottom: 16px; overflow: hidden; }
+  .etapa > h2 { margin: 0; padding: 12px 16px; font-size: 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; border-bottom: 1px solid var(--borde); }
+  .progreso { flex: 1 1 140px; max-width: 260px; height: 6px; background: var(--pendiente-f); border-radius: 3px; overflow: hidden; }
+  .progreso i { display: block; height: 100%; background: var(--hecha); }
+  .cuenta { color: var(--suave); font-size: 13px; font-weight: 400; font-variant-numeric: tabular-nums; }
+  .tarea { padding: 10px 16px; border-top: 1px solid var(--borde); display: grid; grid-template-columns: 52px 1fr; gap: 4px 12px; }
+  .tarea:first-of-type { border-top: 0; }
+  .tarea.oculta { display: none; }
+  .id { font-weight: 600; font-variant-numeric: tabular-nums; padding-top: 1px; }
+  .titulo { overflow-wrap: anywhere; }
+  .datos { grid-column: 2; display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--suave); font-size: 13px; align-items: center; }
+  .estado { display: inline-flex; gap: 5px; align-items: center; border-radius: 999px; padding: 1px 9px; font-size: 12.5px; font-weight: 600; }
+  .estado.hecha { color: var(--hecha); background: var(--hecha-f); }
+  .estado.revision { color: var(--revision); background: var(--revision-f); }
+  .estado.espera { color: var(--espera); background: var(--espera-f); }
+  .estado.bloqueada { color: var(--bloqueada); background: var(--bloqueada-f); }
+  .estado.pendiente { color: var(--pendiente); background: var(--pendiente-f); }
+  .sinprobar { color: var(--aviso); font-size: 12.5px; }
+  code { background: var(--codigo); border-radius: 4px; padding: 0 4px; font: 13px/1.4 Consolas, "Cascadia Mono", monospace; overflow-wrap: anywhere; }
+  details { grid-column: 2; }
+  summary { cursor: pointer; color: var(--acento); font-size: 13px; width: fit-content; }
+  .detalle { margin: 6px 0 2px; font-size: 13.5px; color: var(--texto); }
+  .detalle p { margin: 4px 0; overflow-wrap: anywhere; }
+  .detalle .rot { color: var(--suave); }
+  .notas { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 6px; }
+  .notas li { border-left: 3px solid var(--borde); padding: 2px 0 2px 10px; }
+  .notas li.claude { border-left-color: var(--acento); }
+  .notas .quien { color: var(--suave); font-size: 12.5px; }
+  .notas .txt { white-space: pre-wrap; overflow-wrap: anywhere; }
+  form { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-start; margin-top: 6px; }
+  textarea { flex: 1 1 260px; min-height: 38px; border: 1px solid var(--borde); border-radius: 6px; padding: 6px 8px; background: var(--fondo); resize: vertical; }
+  button.agregar { background: var(--acento); color: #fff; border: 0; border-radius: 6px; padding: 7px 14px; cursor: pointer; }
+  @media (prefers-color-scheme: dark) { button.agregar { color: #0e1620; } }
+  .error-form { color: var(--bloqueada); font-size: 13px; width: 100%; }
+  .vacio { color: var(--suave); padding: 24px; text-align: center; }
+  :focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  @media (max-width: 560px) { .tarea { grid-template-columns: 1fr; } .datos, details { grid-column: 1; } .vivo { margin-left: 0; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="barra">
+    <h1 id="titulo">Tablero <small>· tareas por etapa</small></h1>
+    <label class="sr" for="spec">Especificación</label>
+    <select id="spec"></select>
+    <span class="vivo" id="vivo" role="status" aria-live="polite">Conectado</span>
+  </div>
+</header>
+<main>
+  <div class="resumen" id="resumen" role="group" aria-label="Filtrar por estado"></div>
+  <div class="meta" id="meta"></div>
+  <div id="etapas"><p class="vacio">Cargando…</p></div>
+</main>
+<script>
+"use strict";
+const ICONOS = { hecha: "✓", revision: "◐", espera: "⏳", bloqueada: "⛔", pendiente: "○" };
+const $ = (s) => document.querySelector(s);
+let actual = null, huella = null, filtro = null;
+const abiertos = new Set(), borradores = new Map();
+
+// Texto de las tablas: `código` y **negrita**, siempre como texto (nunca HTML).
+function md(texto) {
+  const f = document.createDocumentFragment();
+  texto.split(/(`[^`]*`)/).forEach((parte) => {
+    if (parte.startsWith("`") && parte.endsWith("`") && parte.length > 1) {
+      const c = document.createElement("code"); c.textContent = parte.slice(1, -1); f.append(c); return;
+    }
+    parte.split(/(\*\*[^*]+\*\*)/).forEach((p) => {
+      if (p.startsWith("**") && p.endsWith("**") && p.length > 4) {
+        const b = document.createElement("strong"); b.textContent = p.slice(2, -2); f.append(b);
+      } else if (p) f.append(document.createTextNode(p));
+    });
+  });
+  return f;
+}
+function el(tag, props = {}, ...hijos) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (k === "class") e.className = v; else if (k.startsWith("on")) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v);
+  }
+  hijos.flat().forEach((h) => h != null && e.append(h instanceof Node ? h : document.createTextNode(String(h))));
+  return e;
+}
+const fecha = (iso) => new Date(iso).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short", hourCycle: "h23" });
+
+async function cargarSpecs() {
+  try {
+    const { proyecto } = await (await fetch("/api/info")).json();
+    $("#titulo").firstChild.textContent = `Tablero de ${proyecto} `;
+    document.title = `Tablero · ${proyecto}`;
+  } catch {}
+  const lista = await (await fetch("/api/specs")).json();
+  const sel = $("#spec");
+  const guardada = (() => { try { return localStorage.getItem("tablero.spec"); } catch { return null; } })();
+  lista.forEach((s) => sel.append(el("option", { value: s.id }, `${s.titulo}${s.estado ? " · " + s.estado : ""}`)));
+  sel.value = lista.some((s) => s.id === guardada) ? guardada : (lista.find((s) => /en curso/i.test(s.estado)) || lista[lista.length - 1]).id;
+  sel.addEventListener("change", () => { try { localStorage.setItem("tablero.spec", sel.value); } catch {} filtro = null; abiertos.clear(); cargar(); });
+  await cargar();
+}
+
+async function cargar() {
+  const r = await fetch(`/api/spec/${$("#spec").value}`);
+  actual = await r.json();
+  huella = actual.huella;
+  pintar();
+}
+
+function pintar() {
+  const v = actual;
+  // Resumen y filtros
+  const res = $("#resumen"); res.replaceChildren();
+  res.append(el("button", { class: "chip", "aria-pressed": String(filtro === null), onclick: () => { filtro = null; pintar(); } },
+    "Todas ", el("b", {}, v.total)));
+  for (const [k, nombre] of Object.entries(v.estados)) {
+    if (!v.conteo[k]) continue;
+    res.append(el("button", { class: "chip", "aria-pressed": String(filtro === k), onclick: () => { filtro = filtro === k ? null : k; pintar(); } },
+      el("span", { class: `estado ${k}` }, ICONOS[k], " ", nombre), " ", el("b", {}, v.conteo[k])));
+  }
+  $("#meta").replaceChildren(md(`${v.estado || ""}${v.fase ? " · fase " + v.fase : ""} · ${v.conteo.hecha} de ${v.total} hechas · fuente: \`${v.archivo}\``));
+
+  // Etapas
+  const cont = $("#etapas"); cont.replaceChildren();
+  if (!v.etapas.length) { cont.append(el("p", { class: "vacio" }, "Esta especificación todavía no tiene tareas.")); return; }
+  for (const e of v.etapas) {
+    const pct = e.tareas.length ? Math.round((e.hechas / e.tareas.length) * 100) : 0;
+    const sec = el("section", { class: "etapa" },
+      el("h2", {}, md(e.titulo.replace(/^Fase\s+/, "Etapa ")),
+        el("span", { class: "progreso", role: "progressbar", "aria-valuemin": "0", "aria-valuemax": "100", "aria-valuenow": String(pct), "aria-label": `Avance de la etapa: ${pct} %` }, el("i", { style: `width:${pct}%` })),
+        el("span", { class: "cuenta" }, `${e.hechas}/${e.tareas.length}`)));
+    for (const t of e.tareas) sec.append(tarea(t));
+    if (filtro && !e.tareas.some((t) => t.estado === filtro)) sec.hidden = true;
+    cont.append(sec);
+  }
+}
+
+function tarea(t) {
+  const clave = `${actual.id}:${t.id}`;
+  const datos = el("div", { class: "datos" },
+    el("span", { class: `estado ${t.estado}` }, ICONOS[t.estado], " ", actual.estados[t.estado]),
+    t.sinProbar ? el("span", { class: "sinprobar" }, "⚠ con partes sin probar") : null,
+    el("span", {}, "Quién: ", t.quien),
+    t.depende.length || t.dependeExterno.length ? el("span", {}, "Depende de: ", [...t.depende, ...t.dependeExterno].join(", ")) : null,
+    t.cubre && t.cubre !== "—" ? el("span", {}, "Cubre: ", md(t.cubre)) : null,
+    t.notas.length ? el("span", {}, `📝 ${t.notas.length} nota${t.notas.length > 1 ? "s" : ""}`) : null);
+
+  const lista = el("ul", { class: "notas" }, t.notas.map((n) =>
+    el("li", { class: n.origen === "claude" ? "claude" : "" },
+      el("div", { class: "quien" }, `${n.autor} · ${fecha(n.fecha)}`), el("div", { class: "txt" }, n.texto))));
+  const area = el("textarea", { "aria-label": `Nota para ${t.id}`, placeholder: "Agregar una nota…", maxlength: "2000" });
+  area.value = borradores.get(clave) || "";
+  area.addEventListener("input", () => borradores.set(clave, area.value));
+  const err = el("div", { class: "error-form", role: "alert" });
+  const form = el("form", { onsubmit: async (ev) => {
+      ev.preventDefault();
+      err.textContent = "";
+      const texto = area.value.trim();
+      if (!texto) { err.textContent = "Escribí la nota."; return; }
+      const r = await fetch(`/api/spec/${actual.id}/notas`, { method: "POST", headers: { "Content-Type": "application/json", "X-Tablero": "1" }, body: JSON.stringify({ tarea: t.id, texto }) });
+      if (!r.ok) { err.textContent = (await r.json()).error || "No se pudo guardar."; return; }
+      borradores.delete(clave); abiertos.add(clave); await cargar();
+    } }, area, el("button", { class: "agregar", type: "submit" }, "Agregar nota"), err);
+
+  const det = el("details", {},
+    el("summary", {}, "Verificación y notas"),
+    el("div", { class: "detalle" },
+      el("p", {}, el("span", { class: "rot" }, "Verificación: "), md(t.verificacion || "—")),
+      lista, form));
+  det.open = abiertos.has(clave);
+  det.addEventListener("toggle", () => det.open ? abiertos.add(clave) : abiertos.delete(clave));
+
+  const fila = el("article", { class: "tarea", "aria-label": `${t.id}: ${actual.estados[t.estado]}` },
+    el("div", { class: "id" }, t.id), el("div", { class: "titulo" }, md(t.tarea)), datos, det);
+  if (filtro && t.estado !== filtro) fila.classList.add("oculta");
+  return fila;
+}
+
+// Se actualiza sola: cada 3 s compara la huella de tasks.md, specification.md y las notas.
+async function vigilar() {
+  try {
+    const r = await fetch(`/api/spec/${$("#spec").value}/huella`, { cache: "no-store" });
+    const { huella: h } = await r.json();
+    $("#vivo").textContent = "Conectado"; $("#vivo").classList.remove("error");
+    if (h !== huella) {
+      const enFoco = document.activeElement;
+      if (!(enFoco && enFoco.tagName === "TEXTAREA")) { await cargar(); $("#vivo").textContent = `Actualizado ${new Date().toLocaleTimeString("es-AR", { hourCycle: "h23" })}`; }
+    }
+  } catch {
+    $("#vivo").textContent = "Sin conexión con el tablero"; $("#vivo").classList.add("error");
+  }
+}
+cargarSpecs().then(() => setInterval(vigilar, 3000));
+</script>
+</body>
+</html>
