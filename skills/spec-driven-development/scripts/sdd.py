@@ -119,7 +119,9 @@ class Spec:
     @property
     def titulo(self) -> str:
         m = re.search(r"^#\s+(.+)$", self.texto, re.M)
-        return m.group(1).strip() if m else self.carpeta.name
+        if not m:
+            return self.carpeta.name
+        return re.sub(r"^\d{3}\s*·\s*", "", m.group(1).strip())
 
 
 def cargar(raiz: Path) -> list[Spec]:
@@ -226,11 +228,15 @@ def validar_tareas(s: Spec, texto: str, conocidos: set[str], h: Hallazgos) -> No
     p = s.numero
     lineas = [ln for ln in texto.splitlines() if ln.strip().startswith("|")]
     if not lineas:
+        h.aviso(f"{p}: tasks.md no tiene tabla de tareas")
         return
     enc = [sin_acentos(c.strip()) for c in lineas[0].strip().strip("|").split("|")]
     def col(nombre: str) -> int | None:
         return next((i for i, c in enumerate(enc) if nombre in c), None)
     i_cubre, i_verif, i_id = col("cubre"), col("verific"), col("id")
+    for nombre, i in (("Cubre", i_cubre), ("Verificación", i_verif), ("Id", i_id)):
+        if i is None:
+            h.aviso(f"{p}: tasks.md no tiene la columna '{nombre}': no se puede controlar")
     for ln in lineas[1:]:
         c = [x.strip() for x in ln.strip().strip("|").split("|")]
         if all(set(x) <= set("-: ") for x in c):

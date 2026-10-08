@@ -90,5 +90,12 @@ Subí `dist/spec-driven-development.skill` desde la configuración de skills. Lo
 
 Sugerencia: agregá en el `CLAUDE.md` de tu proyecto una línea que indique leer `sdd/constitution.md` antes de tocar código.
 
+## Desarrollo
+```bash
+python -m unittest discover -s tests   # pruebas (también corren en CI)
+python build.py                        # regenera dist/spec-driven-development.skill
+```
+Después de cambiar algo en `skills/spec-driven-development/`, corré `build.py`: una prueba falla si el paquete no coincide con el código fuente.
+
 ## Créditos
 Metodología: [specdriven.ai](https://specdriven.ai/). Estas skills son una implementación independiente.

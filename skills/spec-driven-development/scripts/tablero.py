@@ -260,7 +260,14 @@ class Manejador(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(cuerpo)
 
+    def _host_valido(self) -> bool:
+        """Rechaza otros nombres de host (DNS rebinding): solo se acepta localhost o 127.0.0.1."""
+        host = self.headers.get("Host", "").rsplit(":", 1)[0].strip("[]").lower()
+        return host in ("127.0.0.1", "localhost")
+
     def do_GET(self):
+        if not self._host_valido():
+            return self._json(403, {"error": "Host no permitido."})
         ruta = self.path.split("?")[0]
         if ruta == "/":
             cuerpo = PAGINA.read_bytes()
@@ -285,6 +292,8 @@ class Manejador(BaseHTTPRequestHandler):
         self._json(404, {"error": "No encontrado."})
 
     def do_POST(self):
+        if not self._host_valido():
+            return self._json(403, {"error": "Host no permitido."})
         # Solo la propia página: exige una cabecera que otro sitio no puede mandar sin un preflight que acá no se responde.
         if self.headers.get("X-Tablero") != "1":
             return self._json(403, {"error": "Falta X-Tablero."})
