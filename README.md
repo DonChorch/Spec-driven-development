@@ -1,6 +1,6 @@
 # Spec-Driven Development · skills para Claude
 
-Skills para trabajar con **Spec-Driven Development (SDD)**, la metodología descripta en [specdriven.ai](https://specdriven.ai/), en Claude Code y en claude.ai. En español rioplatense.
+Skills para trabajar con **Spec-Driven Development (SDD)**, la metodología descripta en [specdriven.ai](https://specdriven.ai/), en Claude Code y en claude.ai.
 
 En SDD **la especificación es la fuente de verdad**: primero se acuerda qué se quiere y por qué, después cómo, después las tareas. El código se deriva de eso y se valida contra eso. Estas skills hacen que Claude respete esas etapas, con controles de calidad entre una y otra.
 
